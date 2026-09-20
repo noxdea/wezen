@@ -1,0 +1,68 @@
+module Wezen
+  VERSION: String
+  class Error < StandardError
+  end
+
+  class Frame
+    attr_reader rgba: String
+    attr_reader delay_ms: Integer
+  end
+
+  class Animation
+    attr_reader width: Integer
+    attr_reader height: Integer
+    attr_reader loop: Integer
+    def initialize: (width: Integer, height: Integer, ?loop: Integer) -> void
+    def add: (String rgba, delay_ms: Integer) -> self
+    def <<: (Frame frame) -> self
+    def size: () -> Integer
+    def duration_ms: () -> Integer
+    def each: () { (Frame) -> void } -> self
+    def coalesce: (?tolerance: Integer) -> Animation
+    def scale: (to_width: Integer, to_height: Integer) -> Animation
+    def crop: (untyped bounds) -> Animation
+    def drop_to: (fps: Numeric) -> Animation
+  end
+
+  class Palette
+    attr_reader colors: Array[Array[Integer]]
+    attr_reader transparent_index: Integer?
+  end
+
+  module Image
+    def self.scale: (String rgba, Integer width, Integer height, to_width: Integer, to_height: Integer) -> String
+    def self.crop: (String rgba, Integer width, Integer height, untyped bounds) -> String
+    def self.blend: (String dst, Integer dst_width, String src, Integer src_width, Integer src_height, x: Integer, y: Integer, ?opacity: Numeric) -> String
+    def self.diff_bounds: (String previous, String current, Integer width, Integer height) -> [Integer, Integer, Integer, Integer]?
+  end
+
+  module Quantize
+    def self.palette: (Animation animation, colors: Integer, ?method: Symbol) -> Palette
+    def self.apply: (String rgba, Palette palette, ?width: Integer?, ?height: Integer?, ?dither: Symbol) -> String
+  end
+
+  module PNG
+    def self.encode: (Integer width, Integer height, String rgba, ?compression: Integer) -> String
+    def self.write: (String path, Integer width, Integer height, String rgba, **untyped) -> String
+  end
+
+  module APNG
+    def self.encode: (Animation animation, ?compression: Integer, ?diff: bool) -> String
+    def self.write: (String path, Animation animation, **untyped) -> String
+  end
+
+  module GIF
+    def self.encode: (Animation animation, ?colors: Integer, ?palette: Symbol | Palette, ?dither: Symbol, ?diff: bool) -> String
+    def self.write: (String path, Animation animation, **untyped) -> String
+  end
+
+  module Cast
+    class Event
+      attr_reader time: Numeric
+      attr_reader kind: Symbol
+      attr_reader data: String
+    end
+    def self.encode: (width: Integer, height: Integer, events: Array[Event | Array[untyped]], ?title: String?, ?env: Hash[untyped, untyped]) -> String
+    def self.write: (String path, **untyped) -> String
+  end
+end

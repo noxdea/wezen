@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07090a">
+  <meta name="description" content="Wezen is a dependency-free Ruby encoder for deterministic APNG, GIF, PNG, and asciinema demo media.">
+  <link rel="canonical" href="https://noxdea.github.io/wezen/">
+  <title>Wezen — Deterministic demo media for Ruby</title>
+  <style>
+    :root { color-scheme: dark; --darkroom:#07090a; --film:#111619; --rail:#303a3e; --paper:#e9edea; --muted:#a4aeaa; --weight:#b7a66f; --ink:#17150d; }
+    * { box-sizing: border-box; }
+    html { background: var(--darkroom); }
+    body { margin: 0; min-width: 320px; color: var(--paper); background: var(--darkroom); font: 16px/1.65 "Avenir Next", Avenir, "Segoe UI", sans-serif; }
+    a { color: inherit; }
+    .skip { position: absolute; top: -5rem; left: 1rem; z-index: 10; padding: .65rem .9rem; color: var(--ink); background: var(--weight); }
+    .skip:focus { top: 1rem; }
+    :focus-visible { outline: 3px solid var(--weight); outline-offset: 4px; }
+    .wrap { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
+    header { display: flex; align-items: center; justify-content: space-between; min-height: 76px; border-bottom: 1px solid var(--rail); }
+    .brand { font: 900 1.15rem/1 "Arial Black", "Avenir Next", sans-serif; text-decoration: none; }
+    nav { display: flex; gap: 1.4rem; color: var(--muted); font-size: .9rem; }
+    nav a { text-decoration: none; }
+    nav a:hover { color: var(--paper); }
+    .hero { display: grid; grid-template-columns: minmax(0, .82fr) minmax(520px, 1.18fr); gap: clamp(3rem, 7vw, 7rem); align-items: center; min-height: 720px; padding: 92px 0; }
+    h1, h2 { margin: 0; font-family: "Arial Black", "Avenir Next", sans-serif; font-weight: 900; text-wrap: balance; }
+    h1 { max-width: 9ch; font-size: clamp(3.5rem, 7vw, 6.9rem); line-height: .92; }
+    h2 { max-width: 12ch; font-size: clamp(2.2rem, 4.5vw, 3.8rem); line-height: 1; }
+    p { text-wrap: pretty; }
+    .lede { max-width: 51ch; margin: 1.7rem 0 0; color: var(--muted); font-size: 1.08rem; }
+    .actions { display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 2rem; }
+    .button { display: inline-flex; align-items: center; min-height: 44px; padding: .65rem 1rem; border: 1px solid var(--rail); text-decoration: none; }
+    .button.primary { border-color: var(--weight); color: var(--ink); background: var(--weight); font-weight: 700; }
+    .encoder { min-width: 0; margin: 0; overflow: hidden; border: 1px solid var(--rail); background: var(--film); }
+    .encoder figcaption { display: flex; justify-content: space-between; gap: 1rem; padding: .75rem .9rem; border-bottom: 1px solid var(--rail); color: var(--muted); font: .74rem/1.4 ui-monospace, "SFMono-Regular", Consolas, monospace; font-variant-numeric: tabular-nums; }
+    .timeline { padding: 1.25rem; }
+    .timecode { display: flex; justify-content: space-between; margin-bottom: .55rem; color: var(--muted); font: .68rem/1.4 ui-monospace, "SFMono-Regular", Consolas, monospace; font-variant-numeric: tabular-nums; }
+    .frames { display: grid; grid-template-columns: repeat(6, 1fr); gap: .55rem; }
+    .frame { position: relative; aspect-ratio: 16 / 10; border: 1px solid #4b5558; background: #d8deda; }
+    .frame::before { position: absolute; right: 12%; bottom: 16%; width: 25%; height: 46%; content: ""; background: #263136; }
+    .frame::after { position: absolute; right: 18%; bottom: 24%; width: 14%; height: 14%; content: ""; background: var(--weight); }
+    .frame:nth-child(2)::before { right: 21%; }
+    .frame:nth-child(2)::after { right: 27%; }
+    .frame:nth-child(3)::before { right: 30%; }
+    .frame:nth-child(3)::after { right: 36%; }
+    .frame:nth-child(4)::before { right: 39%; }
+    .frame:nth-child(4)::after { right: 45%; }
+    .frame:nth-child(5)::before { right: 48%; }
+    .frame:nth-child(5)::after { right: 54%; }
+    .frame:nth-child(6)::before { right: 57%; }
+    .frame:nth-child(6)::after { right: 63%; }
+    .scrub { position: relative; height: 29px; margin-top: .8rem; border-top: 1px solid var(--rail); }
+    .scrub::before { position: absolute; top: -4px; left: 42%; width: 9px; height: 9px; content: ""; background: var(--weight); }
+    .scrub::after { position: absolute; top: 0; bottom: 0; left: calc(42% + 4px); width: 1px; content: ""; background: var(--weight); }
+    .bounds { display: grid; grid-template-columns: 1fr auto; gap: 1rem; padding: 1rem 1.25rem; border-top: 1px solid var(--rail); }
+    .bounds strong { font-size: .9rem; }
+    .bounds span { color: var(--muted); font: .74rem/1.5 ui-monospace, "SFMono-Regular", Consolas, monospace; font-variant-numeric: tabular-nums; }
+    .outputs { border-top: 1px solid var(--rail); }
+    .output { display: grid; grid-template-columns: 66px 1fr auto; gap: 1rem; align-items: center; padding: .8rem 1.25rem; border-bottom: 1px solid var(--rail); }
+    .output:last-child { border-bottom: 0; }
+    .output b { color: var(--weight); font: 600 .77rem/1.4 ui-monospace, "SFMono-Regular", Consolas, monospace; }
+    .output span { color: var(--muted); font-size: .83rem; }
+    .output code { color: var(--paper); font-size: .72rem; }
+    .section { display: grid; grid-template-columns: .72fr 1.28fr; gap: clamp(2rem, 7vw, 7rem); padding: 92px 0; border-top: 1px solid var(--rail); }
+    .section-copy { max-width: 38ch; color: var(--muted); }
+    .formats { border-top: 1px solid var(--rail); }
+    .format { display: grid; grid-template-columns: 94px 1fr; gap: 1.5rem; padding: 1.35rem 0; border-bottom: 1px solid var(--rail); }
+    .format strong { color: var(--weight); font-weight: 600; }
+    .format p { margin: 0; color: var(--muted); }
+    .operations { display: grid; grid-template-columns: repeat(2, 1fr); border: 1px solid var(--rail); }
+    .operation { min-height: 156px; padding: 1.25rem; border-right: 1px solid var(--rail); border-bottom: 1px solid var(--rail); }
+    .operation:nth-child(even) { border-right: 0; }
+    .operation:nth-last-child(-n + 2) { border-bottom: 0; }
+    .operation code { color: var(--weight); }
+    .operation h3 { margin: 2rem 0 .4rem; font-size: 1rem; }
+    .operation p { margin: 0; color: var(--muted); font-size: .9rem; }
+    pre.command { margin: 1.4rem 0 0; overflow-x: auto; padding: 1.1rem; border: 1px solid var(--rail); color: var(--weight); background: var(--film); font: .88rem/1.7 ui-monospace, "SFMono-Regular", Consolas, monospace; }
+    footer { display: flex; justify-content: space-between; gap: 1rem; padding: 30px 0 46px; border-top: 1px solid var(--rail); color: var(--muted); font-size: .85rem; }
+    @media (max-width: 900px) {
+      .hero, .section { grid-template-columns: 1fr; }
+      .hero { min-height: auto; padding: 72px 0 82px; }
+      .encoder { max-width: 680px; }
+    }
+    @media (max-width: 580px) {
+      .wrap { width: min(100% - 24px, 1180px); }
+      nav a:not(:last-child) { display: none; }
+      h1 { font-size: clamp(3.35rem, 16vw, 5.4rem); }
+      .timeline { padding: .8rem; overflow: hidden; }
+      .frames { width: 520px; }
+      .output { grid-template-columns: 58px 1fr; gap: .55rem; }
+      .output code { grid-column: 2; }
+      .format, .operations { grid-template-columns: 1fr; }
+      .format { gap: .35rem; }
+      .operation { min-height: 0; border-right: 0; }
+      .operation:nth-last-child(2) { border-bottom: 1px solid var(--rail); }
+      .operation h3 { margin-top: 1rem; }
+      footer { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="wrap">
+    <a class="brand" href="./">Wezen</a>
+    <nav aria-label="Primary navigation">
+      <a href="#formats">Formats</a>
+      <a href="#operations">Operations</a>
+      <a href="https://github.com/noxdea/wezen">Source</a>
+    </nav>
+  </header>
+  <main id="content">
+    <section class="hero wrap">
+      <div>
+        <h1>Same frames. Same bytes.</h1>
+        <p class="lede">Wezen turns Ruby pixel data into deterministic APNG, GIF, PNG, and asciinema media. No runtime dependencies beyond the standard library.</p>
+        <div class="actions">
+          <a class="button primary" href="https://rubygems.org/gems/wezen">Install the gem</a>
+          <a class="button" href="https://github.com/noxdea/wezen#quick-start">Read the guide</a>
+        </div>
+      </div>
+      <figure class="encoder">
+        <figcaption><span>demo / 160×90</span><span>6 frames / 640 ms</span></figcaption>
+        <div class="timeline" aria-hidden="true">
+          <div class="timecode"><span>00:00.000</span><span>00:00.640</span></div>
+          <div class="frames"><i class="frame">&nbsp;</i><i class="frame">&nbsp;</i><i class="frame">&nbsp;</i><i class="frame">&nbsp;</i><i class="frame">&nbsp;</i><i class="frame">&nbsp;</i></div>
+          <div class="scrub"></div>
+        </div>
+        <div class="bounds"><strong>Changed pixels only</strong><span>x 64 / y 29 / w 40 / h 42</span></div>
+        <div class="outputs">
+          <div class="output"><b>APNG</b><span>Lossless rectangles</span><code>demo.apng</code></div>
+          <div class="output"><b>GIF89a</b><span>Global median-cut palette</span><code>demo.gif</code></div>
+          <div class="output"><b>Cast v2</b><span>Chronological JSON Lines</span><code>demo.cast</code></div>
+        </div>
+      </figure>
+    </section>
+
+    <section class="section wrap" id="formats">
+      <div>
+        <h2>Encode for the place it plays.</h2>
+        <p class="section-copy">One animation timeline produces stable assets for browsers, terminals, documentation, and test fixtures.</p>
+      </div>
+      <div class="formats">
+        <div class="format"><strong>APNG</strong><p>Preserves full RGBA pixels and writes changed frame rectangles when it can do so exactly.</p></div>
+        <div class="format"><strong>GIF89a</strong><p>Builds deterministic global or adaptive palettes with optional Floyd–Steinberg or Bayer dithering.</p></div>
+        <div class="format"><strong>PNG</strong><p>Writes compact, predictable still images with Ruby’s standard zlib implementation.</p></div>
+        <div class="format"><strong>Cast v2</strong><p>Serializes terminal output, input, and resize events in asciinema JSON Lines format.</p></div>
+      </div>
+    </section>
+
+    <section class="section wrap" id="operations">
+      <div>
+        <h2>Shape the timeline before export.</h2>
+        <p class="section-copy">Pixel operations stay explicit. Repeated frames coalesce, delays remain visible, and every encoder receives the same source.</p>
+        <pre class="command"><code>gem install wezen</code></pre>
+      </div>
+      <div class="operations">
+        <div class="operation"><code>coalesce</code><h3>Merge repeated frames</h3><p>Combine identical or near-identical pixels and add their delays.</p></div>
+        <div class="operation"><code>scale</code><h3>Resize without ambiguity</h3><p>Apply deterministic nearest-neighbor scaling to every RGBA frame.</p></div>
+        <div class="operation"><code>crop</code><h3>Keep the useful region</h3><p>Crop the same explicit bounds across the complete animation.</p></div>
+        <div class="operation"><code>drop_to</code><h3>Set the sample rate</h3><p>Reduce a timeline to a chosen frames-per-second target.</p></div>
+      </div>
+    </section>
+  </main>
+  <footer class="wrap"><span>Wezen 0.1.0</span><span>Ruby 3.1+ / MIT</span></footer>
+</body>
+</html>
