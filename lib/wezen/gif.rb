@@ -105,7 +105,7 @@ module Wezen
         if next_code < 4096
           dictionary[key] = next_code
           next_code += 1
-          code_size += 1 if next_code == (1 << code_size) && code_size < 12
+          code_size += 1 if next_code > (1 << code_size) && code_size < 12
         else
           writer.write(clear, code_size)
           dictionary.clear

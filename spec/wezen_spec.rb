@@ -32,6 +32,13 @@ RSpec.describe Wezen do
     expect([gif_width, gif_height, gif_frames]).to eq([2, 1, [red + blue, blue + red]])
   end
 
+  it "keeps GIF code sizes aligned for larger runs" do
+    animation = Wezen::Animation.new(width: 4, height: 3).add(red * 12, delay_ms: 100)
+
+    gif_width, gif_height, gif_frames = GIFDecoder.decode(Wezen::GIF.encode(animation, colors: 2, dither: :none))
+    expect([gif_width, gif_height, gif_frames]).to eq([4, 3, [red * 12]])
+  end
+
   it "finds changed image bounds" do
     expect(Wezen::Image.diff_bounds(red + red, red + blue, 2, 1)).to eq([1, 0, 1, 1])
     expect(Wezen::Image.diff_bounds(red, red, 1, 1)).to be_nil
