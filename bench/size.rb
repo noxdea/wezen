@@ -2,15 +2,20 @@
 
 require "wezen"
 
-width = 80
-height = 45
+width = 1_000
+height = 700
 animation = Wezen::Animation.new(width: width, height: height)
-12.times do |frame|
-  pixels = String.new(capacity: width * height * 4, encoding: Encoding::BINARY)
-  height.times do |y|
-    width.times do |x|
-      active = (x - frame * 3).abs < 24 && (y - 90).abs < 24
-      pixels << [active ? 240 : 24, active ? 180 : 32, active ? 60 : 48, 255].pack("C4")
+background = [24, 32, 48, 255].pack("C4") * (width * height)
+120.times do |frame|
+  pixels = background.dup
+  cursor_x = (frame * 7) % (width - 40)
+  cursor_y = height / 2
+  24.times do |y|
+    40.times do |x|
+      offset = ((cursor_y + y) * width + cursor_x + x) * 4
+      pixels.setbyte(offset, 240)
+      pixels.setbyte(offset + 1, 180)
+      pixels.setbyte(offset + 2, 60)
     end
   end
   animation.add(pixels, delay_ms: 83)

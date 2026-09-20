@@ -24,18 +24,25 @@ module Wezen
 
       previous = nil
       animation.each.with_index do |frame, index|
-        indices = Quantize.apply_with_size(frame.rgba, source_palette, width: animation.width, height: animation.height, dither: dither)
-        rect, patch = if index.zero? || !diff || previous.nil?
-          [[0, 0, animation.width, animation.height], indices]
+        rect, patch_rgba = if index.zero? || !diff || previous.nil?
+          [[0, 0, animation.width, animation.height], frame.rgba]
         else
           bounds = Image.diff_bounds(previous, frame.rgba, animation.width, animation.height)
           if bounds
-            [bounds, indexed_crop(indices, animation.width, bounds)]
+            [bounds, Image.crop(frame.rgba, animation.width, animation.height, bounds)]
           else
-            [[0, 0, 1, 1], source_palette.transparent_index.chr]
+            [[0, 0, 1, 1], nil]
           end
         end
-        transparent = source_palette.transparent_index && frame.rgba.bytes.each_slice(4).any? { |pixel| pixel[3] < 128 }
+        patch = if patch_rgba
+          width = rect[2]
+          height = rect[3]
+          transparent = source_palette.transparent_index && patch_rgba.bytes.each_slice(4).any? { |pixel| pixel[3] < 128 }
+          Quantize.apply_with_size(patch_rgba, source_palette, width: width, height: height, dither: dither)
+        else
+          transparent = source_palette.transparent_index
+          patch_rgba
+        end
         output << graphic_control(frame.delay_ms, transparent ? source_palette.transparent_index : nil)
         output << image_descriptor(rect, bits)
         output << sub_blocks(lzw(patch, [bits, 2].max), [bits, 2].max)
@@ -67,13 +74,6 @@ module Wezen
     def image_descriptor(rect, bits)
       x, y, width, height = rect
       [44, x, y, width, height, 0].pack("CvvvvC")
-    end
-
-    def indexed_crop(indices, width, rect)
-      x, y, crop_width, crop_height = rect
-      output = String.new(capacity: crop_width * crop_height, encoding: Encoding::BINARY)
-      crop_height.times { |row| output << indices.byteslice((y + row) * width + x, crop_width) }
-      output
     end
 
     def sub_blocks(bytes, minimum_code_size)
@@ -143,6 +143,6 @@ module Wezen
     end
 
     private_class_method :reserve_transparency, :loop_extension, :graphic_control, :image_descriptor,
-      :indexed_crop, :sub_blocks, :lzw
+      :sub_blocks, :lzw
   end
 end

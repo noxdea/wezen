@@ -81,10 +81,21 @@ module Wezen
     def diff_bounds(previous, current, width, height)
       validate!(previous, width, height); validate!(current, width, height)
       min_x = width; min_y = height; max_x = -1; max_y = -1
-      (0...(width * height)).each do |index|
-        next if previous.byteslice(index * 4, 4) == current.byteslice(index * 4, 4)
-        x = index % width; y = index / width
-        min_x = x if x < min_x; min_y = y if y < min_y; max_x = x if x > max_x; max_y = y if y > max_y
+      row_bytes = width * 4
+      height.times do |y|
+        row_offset = y * row_bytes
+        next if previous.byteslice(row_offset, row_bytes) == current.byteslice(row_offset, row_bytes)
+
+        width.times do |x|
+          offset = row_offset + x * 4
+          different = previous.getbyte(offset) != current.getbyte(offset) ||
+            previous.getbyte(offset + 1) != current.getbyte(offset + 1) ||
+            previous.getbyte(offset + 2) != current.getbyte(offset + 2) ||
+            previous.getbyte(offset + 3) != current.getbyte(offset + 3)
+          if different
+            min_x = x if x < min_x; min_y = y if y < min_y; max_x = x if x > max_x; max_y = y if y > max_y
+          end
+        end
       end
       max_x.negative? ? nil : [min_x, min_y, max_x - min_x + 1, max_y - min_y + 1]
     end
